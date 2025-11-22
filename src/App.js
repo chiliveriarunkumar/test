@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
@@ -207,7 +207,7 @@ const BootScreen = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [glitchActive, setGlitchActive] = useState(false);
 
-  const bootMessages = [
+  const bootMessages = useMemo(() => [
     { text: 'BIOS Version 4.2.1 - Arunkumar Systems', type: 'system' },
     { text: 'Initializing quantum processors...', type: 'info' },
     { text: 'CPU: Neural Core X1 @ 4.8GHz', type: 'success' },
@@ -225,28 +225,43 @@ const BootScreen = ({ onComplete }) => {
     { text: '', type: 'blank' },
     { text: '[ SYSTEM READY ]', type: 'final' },
     { text: 'Welcome to the Matrix, visitor...', type: 'final' },
-  ];
+  ], []);
 
   useEffect(() => {
     let i = 0;
-    const interval = setInterval(() => {
-      if (i < bootMessages.length) {
-        setLines(prev => [...prev, bootMessages[i]]);
-        setProgress(((i + 1) / bootMessages.length) * 100);
+    let isCancelled = false;
 
-        // Random glitch effect
-        if (Math.random() > 0.7) {
-          setGlitchActive(true);
-          setTimeout(() => setGlitchActive(false), 100);
+    const interval = setInterval(() => {
+      if (isCancelled) return;
+
+      if (i < bootMessages.length) {
+        const message = bootMessages[i];
+        if (message) {
+          setLines(prev => [...prev, message]);
+          setProgress(((i + 1) / bootMessages.length) * 100);
+
+          // Random glitch effect
+          if (Math.random() > 0.7) {
+            setGlitchActive(true);
+            setTimeout(() => {
+              if (!isCancelled) setGlitchActive(false);
+            }, 100);
+          }
         }
         i++;
       } else {
         clearInterval(interval);
-        setTimeout(onComplete, 800);
+        setTimeout(() => {
+          if (!isCancelled) onComplete();
+        }, 800);
       }
     }, 120);
-    return () => clearInterval(interval);
-  }, [onComplete]);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [onComplete, bootMessages]);
 
   return (
     <motion.div
@@ -263,15 +278,17 @@ const BootScreen = ({ onComplete }) => {
       </div>
       <div className="boot-text">
         {lines.map((line, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className={`boot-line ${line.type}`}
-          >
-            {line.type !== 'blank' && <span className="line-prefix">[{String(idx).padStart(2, '0')}]</span>}
-            {line.text}
-          </motion.div>
+          line && (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={`boot-line ${line.type || ''}`}
+            >
+              {line.type !== 'blank' && <span className="line-prefix">[{String(idx).padStart(2, '0')}]</span>}
+              {line.text}
+            </motion.div>
+          )
         ))}
       </div>
       <div className="boot-progress">
