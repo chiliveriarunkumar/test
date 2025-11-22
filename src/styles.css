@@ -1,0 +1,1124 @@
+/* ==================== CSS VARIABLES & RESET ==================== */
+:root {
+  --terminal-bg: #0a0a0a;
+  --terminal-green: #00ff41;
+  --terminal-cyan: #00d4ff;
+  --terminal-amber: #ffb000;
+  --terminal-red: #ff0040;
+  --terminal-purple: #bf00ff;
+  --terminal-pink: #ff0080;
+  --glow-green: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+  --glow-cyan: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--terminal-green);
+  border-radius: 4px;
+}
+
+/* ==================== BODY ==================== */
+body {
+  font-family: 'Fira Code', monospace;
+  background: var(--terminal-bg);
+  color: var(--terminal-green);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* ==================== BOOT SCREEN ==================== */
+.boot-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.boot-text {
+  font-size: 14px;
+  color: var(--terminal-green);
+  text-align: left;
+  max-width: 800px;
+  width: 100%;
+}
+
+.boot-line {
+  margin-bottom: 5px;
+}
+
+.boot-progress {
+  width: 100%;
+  max-width: 400px;
+  height: 20px;
+  border: 2px solid var(--terminal-green);
+  margin-top: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.boot-progress-bar {
+  height: 100%;
+  background: var(--terminal-green);
+  box-shadow: var(--glow-green);
+}
+
+/* ==================== MATRIX RAIN ==================== */
+.matrix-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.15;
+}
+
+/* ==================== SCANLINES ==================== */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1; }
+  100% { opacity: 0.98; }
+}
+
+/* ==================== PARTICLES ==================== */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--terminal-green);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--terminal-green);
+}
+
+/* ==================== TERMINAL CONTAINER ==================== */
+.terminal-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================== TERMINAL HEADER ==================== */
+.terminal-header {
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+  border-radius: 10px 10px 0 0;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #333;
+  border-bottom: none;
+}
+
+.terminal-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.terminal-btn.red { background: #ff5f56; }
+.terminal-btn.yellow { background: #ffbd2e; }
+.terminal-btn.green { background: #27ca3f; }
+
+.terminal-btn:hover {
+  transform: scale(1.3);
+  filter: brightness(1.3);
+}
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}
+
+/* ==================== TERMINAL BODY ==================== */
+.terminal-body {
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid #333;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 20px;
+  min-height: 80vh;
+  backdrop-filter: blur(10px);
+}
+
+/* ==================== NAVIGATION ==================== */
+.nav-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.nav-cmd {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-cmd::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--terminal-green);
+  transition: left 0.3s ease;
+  z-index: -1;
+}
+
+.nav-cmd:hover::before {
+  left: 0;
+}
+
+.nav-cmd:hover {
+  color: #000;
+}
+
+.nav-cmd.active {
+  background: var(--terminal-green);
+  color: #000;
+  box-shadow: var(--glow-green);
+}
+
+/* ==================== SECTIONS ==================== */
+.section {
+  min-height: 60vh;
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--terminal-cyan);
+  text-shadow: var(--glow-cyan);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title::before {
+  content: '>';
+  color: var(--terminal-green);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ==================== HOME SECTION ==================== */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.ascii-art {
+  font-size: 8px;
+  line-height: 1;
+  color: var(--terminal-green);
+  margin-bottom: 30px;
+  white-space: pre;
+}
+
+.hero-name {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--terminal-green), var(--terminal-cyan), var(--terminal-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease infinite;
+  background-size: 200% 200%;
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--terminal-bg);
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--terminal-red);
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim 3s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 var(--terminal-cyan);
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% { clip: rect(31px, 9999px, 94px, 0); }
+  20% { clip: rect(85px, 9999px, 77px, 0); }
+  40% { clip: rect(64px, 9999px, 98px, 0); }
+  60% { clip: rect(61px, 9999px, 85px, 0); }
+  80% { clip: rect(34px, 9999px, 115px, 0); }
+  100% { clip: rect(82px, 9999px, 68px, 0); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-title {
+  font-size: 18px;
+  color: var(--terminal-amber);
+  margin-bottom: 20px;
+}
+
+.typing-text {
+  font-size: 16px;
+  color: #888;
+  min-height: 24px;
+}
+
+.cursor {
+  animation: blink 0.7s infinite;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-item {
+  text-align: center;
+  cursor: pointer;
+}
+
+.stat-number {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--terminal-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* ==================== ABOUT SECTION ==================== */
+.about-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.about-text {
+  line-height: 1.8;
+  color: #ccc;
+}
+
+.about-text p {
+  margin-bottom: 15px;
+}
+
+.info-card {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.info-card h3 {
+  color: var(--terminal-cyan);
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #222;
+  font-size: 12px;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #666;
+}
+
+.info-value {
+  color: var(--terminal-green);
+}
+
+/* ==================== SKILLS SECTION ==================== */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.skill-category {
+  background: rgba(0, 255, 65, 0.03);
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.skill-category h3 {
+  color: var(--terminal-cyan);
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.skill-item {
+  margin-bottom: 15px;
+}
+
+.skill-name {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.skill-bar {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.skill-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--terminal-green), var(--terminal-cyan));
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+/* ==================== EXPERIENCE SECTION ==================== */
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--terminal-green), var(--terminal-cyan), var(--terminal-purple));
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 30px;
+  padding-left: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -34px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  background: var(--terminal-green);
+  border-radius: 50%;
+  box-shadow: var(--glow-green);
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: var(--terminal-amber);
+  margin-bottom: 5px;
+}
+
+.timeline-title {
+  font-size: 16px;
+  color: var(--terminal-cyan);
+  margin-bottom: 5px;
+}
+
+.timeline-company {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.timeline-desc {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.6;
+  list-style: none;
+}
+
+.timeline-desc li {
+  margin-bottom: 5px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.timeline-desc li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: var(--terminal-green);
+}
+
+/* ==================== PROJECTS SECTION ==================== */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.project-preview {
+  height: 200px;
+  background: #111;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-info {
+  padding: 20px;
+}
+
+.project-title {
+  font-size: 16px;
+  color: var(--terminal-cyan);
+  margin-bottom: 10px;
+}
+
+.project-desc {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.project-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tech-tag {
+  padding: 4px 8px;
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid var(--terminal-green);
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--terminal-green);
+}
+
+.project-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.project-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.project-btn:hover {
+  background: var(--terminal-green);
+  color: #000;
+}
+
+.project-btn.demo {
+  border-color: var(--terminal-cyan);
+  color: var(--terminal-cyan);
+}
+
+.project-btn.demo:hover {
+  background: var(--terminal-cyan);
+  color: #000;
+}
+
+/* ==================== PROJECT PREVIEWS ==================== */
+.preview-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Robot Preview */
+.robot-body {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  background: var(--terminal-green);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.robot-head {
+  width: 40px;
+  height: 30px;
+  background: var(--terminal-green);
+  position: absolute;
+  top: -35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.robot-eyes {
+  display: flex;
+  gap: 8px;
+}
+
+.robot-eye {
+  width: 8px;
+  height: 8px;
+  background: #000;
+  border-radius: 50%;
+}
+
+.robot-antenna {
+  position: absolute;
+  top: -50px;
+  width: 2px;
+  height: 15px;
+  background: var(--terminal-green);
+}
+
+.antenna-light {
+  position: absolute;
+  top: -8px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--terminal-red);
+  border-radius: 50%;
+}
+
+/* Ecommerce Preview */
+.ecommerce {
+  flex-direction: column;
+}
+
+.cart-icon {
+  font-size: 40px;
+  position: absolute;
+  bottom: 20px;
+}
+
+.product-falling {
+  width: 30px;
+  height: 30px;
+  background: var(--terminal-cyan);
+  position: absolute;
+}
+
+/* Automation Preview */
+.automation {
+  position: relative;
+}
+
+.node {
+  width: 20px;
+  height: 20px;
+  background: var(--terminal-green);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.data-flow {
+  width: 10px;
+  height: 10px;
+  background: var(--terminal-purple);
+  border-radius: 50%;
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Gas Preview */
+.gas {
+  flex-direction: column;
+}
+
+.sensor-display {
+  width: 80px;
+  height: 60px;
+  background: #111;
+  border: 2px solid var(--terminal-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warning-light {
+  width: 10px;
+  height: 10px;
+  background: var(--terminal-red);
+  border-radius: 50%;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+/* ==================== GAMES SECTION ==================== */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.game-card {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.game-screen {
+  height: 250px;
+  background: #000;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-screen canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.game-info {
+  padding: 15px;
+}
+
+.game-title {
+  font-size: 14px;
+  color: var(--terminal-purple);
+  margin-bottom: 8px;
+}
+
+.game-desc {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.game-controls {
+  font-size: 10px;
+  color: #444;
+}
+
+.game-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--terminal-purple);
+  border: none;
+  color: #fff;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-btn:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px rgba(191, 0, 255, 0.5);
+}
+
+.game-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.game-score {
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--terminal-amber);
+}
+
+/* Memory Game */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+}
+
+.memory-card {
+  background: #111;
+  border: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--terminal-green);
+  transition: all 0.3s ease;
+}
+
+.memory-card.flipped {
+  background: #1a1a1a;
+  border-color: var(--terminal-green);
+}
+
+/* Typing Game */
+.typing-input {
+  width: 100%;
+  padding: 10px;
+  background: #000;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-family: 'Fira Code', monospace;
+  text-align: center;
+  font-size: 14px;
+}
+
+.typing-input:focus {
+  outline: none;
+  border-color: var(--terminal-cyan);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.typing-input:disabled {
+  opacity: 0.5;
+}
+
+/* Hacker Terminal */
+.hacker-terminal {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  font-size: 10px;
+  color: var(--terminal-green);
+}
+
+/* ==================== ACHIEVEMENTS SECTION ==================== */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.achievement-card {
+  background: rgba(255, 176, 0, 0.05);
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.achievement-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.achievement-title {
+  font-size: 14px;
+  color: var(--terminal-amber);
+  margin-bottom: 10px;
+}
+
+.achievement-desc {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+}
+
+/* ==================== CONTACT SECTION ==================== */
+.contact-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.contact-info {
+  background: rgba(0, 255, 65, 0.03);
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #222;
+  transition: all 0.3s ease;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+}
+
+.contact-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 255, 65, 0.1);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.contact-details h4 {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.contact-details a,
+.contact-details span {
+  font-size: 14px;
+  color: var(--terminal-green);
+  text-decoration: none;
+}
+
+.contact-details a:hover {
+  text-shadow: var(--glow-green);
+}
+
+.contact-form {
+  background: rgba(0, 212, 255, 0.03);
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: #666;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #333;
+  color: var(--terminal-green);
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--terminal-cyan);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--terminal-cyan);
+  border: none;
+  color: #000;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+/* ==================== COMMAND LINE ==================== */
+.command-line {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+.cmd-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cmd-prompt {
+  color: var(--terminal-cyan);
+  font-weight: 600;
+}
+
+.cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--terminal-green);
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  outline: none;
+}
+
+.cmd-output {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  font-size: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .hero-name {
+    font-size: 28px;
+  }
+
+  .ascii-art {
+    font-size: 4px;
+  }
+
+  .nav-bar {
+    justify-content: center;
+  }
+
+  .about-content,
+  .contact-container {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-grid,
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-stats {
+    gap: 20px;
+  }
+
+  .stat-number {
+    font-size: 28px;
+  }
+}
