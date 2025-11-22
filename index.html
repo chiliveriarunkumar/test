@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arunkumar | Terminal Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==================== CSS VARIABLES & RESET ==================== */
+        :root {
+            --terminal-bg: #0a0a0a;
+            --terminal-green: #00ff41;
+            --terminal-cyan: #00d4ff;
+            --terminal-amber: #ffb000;
+            --terminal-red: #ff0040;
+            --terminal-purple: #bf00ff;
+            --terminal-pink: #ff0080;
+            --glow-green: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+            --glow-cyan: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
+            --scanline-opacity: 0.03;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--terminal-green);
+            border-radius: 4px;
+        }
+
+        /* ==================== BODY & MAIN CONTAINER ==================== */
+        body {
+            font-family: 'Fira Code', monospace;
+            background: var(--terminal-bg);
+            color: var(--terminal-green);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* ==================== BOOT SCREEN ==================== */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .boot-text {
+            font-size: 14px;
+            color: var(--terminal-green);
+            text-align: left;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .boot-line {
+            opacity: 0;
+            transform: translateY(10px);
+            margin-bottom: 5px;
+        }
+
+        .boot-progress {
+            width: 100%;
+            max-width: 400px;
+            height: 20px;
+            border: 2px solid var(--terminal-green);
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boot-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--terminal-green);
+            transition: width 0.1s ease;
+        }
+
+        /* ==================== MATRIX RAIN ==================== */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        /* ==================== SCANLINES ==================== */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+
+        /* ==================== MAIN TERMINAL ==================== */
+        .terminal-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .terminal-container.visible {
+            opacity: 1;
+        }
+
+        /* ==================== TERMINAL HEADER ==================== */
+        .terminal-header {
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 10px 10px 0 0;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #333;
+            border-bottom: none;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .terminal-btn.red { background: #ff5f56; }
+        .terminal-btn.yellow { background: #ffbd2e; }
+        .terminal-btn.green { background: #27ca3f; }
+
+        .terminal-btn:hover {
+            transform: scale(1.2);
+            filter: brightness(1.2);
+        }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* ==================== TERMINAL BODY ==================== */
+        .terminal-body {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid #333;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+            min-height: 80vh;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        .nav-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .nav-cmd {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-cmd::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--terminal-green);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-cmd:hover::before {
+            left: 0;
+        }
+
+        .nav-cmd:hover {
+            color: #000;
+        }
+
+        .nav-cmd.active {
+            background: var(--terminal-green);
+            color: #000;
+            box-shadow: var(--glow-green);
+        }
+
+        /* ==================== SECTIONS ==================== */
+        .section {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--terminal-cyan);
+            text-shadow: var(--glow-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '>';
+            color: var(--terminal-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* ==================== HOME SECTION ==================== */
+        .hero-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .ascii-art {
+            font-size: 8px;
+            line-height: 1;
+            color: var(--terminal-green);
+            margin-bottom: 30px;
+            white-space: pre;
+            text-shadow: var(--glow-green);
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .hero-name {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--terminal-green), var(--terminal-cyan), var(--terminal-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-title {
+            font-size: 18px;
+            color: var(--terminal-amber);
+            margin-bottom: 20px;
+        }
+
+        .typing-text {
+            font-size: 16px;
+            color: #888;
+            min-height: 24px;
+        }
+
+        .typing-text .cursor {
+            animation: blink 0.7s infinite;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--terminal-cyan);
+            text-shadow: var(--glow-cyan);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* ==================== ABOUT SECTION ==================== */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .about-text {
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        .about-text p {
+            margin-bottom: 15px;
+        }
+
+        .info-card {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .info-card h3 {
+            color: var(--terminal-cyan);
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+            font-size: 12px;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            color: var(--terminal-green);
+        }
+
+        /* ==================== SKILLS SECTION ==================== */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .skill-category {
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .skill-category:hover {
+            border-color: var(--terminal-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .skill-category h3 {
+            color: var(--terminal-cyan);
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-item {
+            margin-bottom: 15px;
+        }
+
+        .skill-name {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .skill-bar {
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--terminal-green), var(--terminal-cyan));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        /* ==================== EXPERIENCE SECTION ==================== */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--terminal-green), var(--terminal-cyan), var(--terminal-purple));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+            padding-left: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -34px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            background: var(--terminal-green);
+            border-radius: 50%;
+            box-shadow: var(--glow-green);
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: var(--terminal-amber);
+            margin-bottom: 5px;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            color: var(--terminal-cyan);
+            margin-bottom: 5px;
+        }
+
+        .timeline-company {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .timeline-desc {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        .timeline-desc li {
+            margin-bottom: 5px;
+            list-style: none;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .timeline-desc li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--terminal-green);
+        }
+
+        /* ==================== PROJECTS SECTION ==================== */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--terminal-cyan);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .project-preview {
+            height: 200px;
+            background: #111;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-preview canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .project-info {
+            padding: 20px;
+        }
+
+        .project-title {
+            font-size: 16px;
+            color: var(--terminal-cyan);
+            margin-bottom: 10px;
+        }
+
+        .project-desc {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            padding: 4px 8px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--terminal-green);
+            border-radius: 3px;
+            font-size: 10px;
+            color: var(--terminal-green);
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .project-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-btn:hover {
+            background: var(--terminal-green);
+            color: #000;
+        }
+
+        .project-btn.demo {
+            border-color: var(--terminal-cyan);
+            color: var(--terminal-cyan);
+        }
+
+        .project-btn.demo:hover {
+            background: var(--terminal-cyan);
+            color: #000;
+        }
+
+        /* ==================== GAMES SECTION ==================== */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover {
+            border-color: var(--terminal-purple);
+            box-shadow: 0 0 30px rgba(191, 0, 255, 0.2);
+        }
+
+        .game-screen {
+            height: 250px;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-screen canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .game-info {
+            padding: 15px;
+        }
+
+        .game-title {
+            font-size: 14px;
+            color: var(--terminal-purple);
+            margin-bottom: 8px;
+        }
+
+        .game-desc {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .game-controls {
+            font-size: 10px;
+            color: #444;
+        }
+
+        .game-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--terminal-purple);
+            border: none;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-btn:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px rgba(191, 0, 255, 0.5);
+        }
+
+        .game-score {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: var(--terminal-amber);
+        }
+
+        /* ==================== ACHIEVEMENTS SECTION ==================== */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .achievement-card {
+            background: rgba(255, 176, 0, 0.05);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-card:hover {
+            border-color: var(--terminal-amber);
+            transform: scale(1.02);
+        }
+
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .achievement-title {
+            font-size: 14px;
+            color: var(--terminal-amber);
+            margin-bottom: 10px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        /* ==================== CONTACT SECTION ==================== */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .contact-info {
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 65, 0.1);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .contact-details h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .contact-details a, .contact-details span {
+            font-size: 14px;
+            color: var(--terminal-green);
+            text-decoration: none;
+        }
+
+        .contact-details a:hover {
+            text-shadow: var(--glow-green);
+        }
+
+        .contact-form {
+            background: rgba(0, 212, 255, 0.03);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #333;
+            color: var(--terminal-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--terminal-cyan);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--terminal-cyan);
+            border: none;
+            color: #000;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .submit-btn:hover {
+            box-shadow: var(--glow-cyan);
+            transform: translateY(-2px);
+        }
+
+        /* ==================== COMMAND LINE ==================== */
+        .command-line {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .cmd-input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cmd-prompt {
+            color: var(--terminal-cyan);
+            font-weight: 600;
+        }
+
+        .cmd-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--terminal-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .cmd-output {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* ==================== GLITCH EFFECT ==================== */
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--terminal-red);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--terminal-cyan);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(31px, 9999px, 94px, 0); }
+            10% { clip: rect(112px, 9999px, 76px, 0); }
+            20% { clip: rect(85px, 9999px, 77px, 0); }
+            30% { clip: rect(27px, 9999px, 97px, 0); }
+            40% { clip: rect(64px, 9999px, 98px, 0); }
+            50% { clip: rect(61px, 9999px, 85px, 0); }
+            60% { clip: rect(99px, 9999px, 114px, 0); }
+            70% { clip: rect(34px, 9999px, 115px, 0); }
+            80% { clip: rect(98px, 9999px, 129px, 0); }
+            90% { clip: rect(43px, 9999px, 96px, 0); }
+            100% { clip: rect(82px, 9999px, 68px, 0); }
+        }
+
+        /* ==================== FLOATING PARTICLES ==================== */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--terminal-green);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 2px solid var(--terminal-green);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--terminal-red);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .hero-name {
+                font-size: 32px;
+            }
+
+            .ascii-art {
+                font-size: 5px;
+            }
+
+            .nav-bar {
+                justify-content: center;
+            }
+
+            .projects-grid, .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== EDUCATION CARDS ==================== */
+        .education-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .edu-card {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .edu-card:hover {
+            border-color: var(--terminal-cyan);
+        }
+
+        .edu-degree {
+            font-size: 16px;
+            color: var(--terminal-cyan);
+            margin-bottom: 5px;
+        }
+
+        .edu-school {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .edu-gpa {
+            font-size: 14px;
+            color: var(--terminal-green);
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="boot-screen">
+        <div class="boot-text" id="boot-text"></div>
+        <div class="boot-progress">
+            <div class="boot-progress-bar" id="boot-progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Matrix Rain Canvas -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- Scanlines Overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Main Terminal Container -->
+    <div class="terminal-container" id="terminal-container">
+        <!-- Terminal Header -->
+        <div class="terminal-header">
+            <div class="terminal-btn red" onclick="closeTerminal()"></div>
+            <div class="terminal-btn yellow" onclick="minimizeTerminal()"></div>
+            <div class="terminal-btn green" onclick="maximizeTerminal()"></div>
+            <div class="terminal-title">arunkumar@portfolio:~</div>
+        </div>
+
+        <!-- Terminal Body -->
+        <div class="terminal-body">
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <button class="nav-cmd active" onclick="showSection('home')">./home</button>
+                <button class="nav-cmd" onclick="showSection('about')">./about</button>
+                <button class="nav-cmd" onclick="showSection('skills')">./skills</button>
+                <button class="nav-cmd" onclick="showSection('experience')">./experience</button>
+                <button class="nav-cmd" onclick="showSection('projects')">./projects</button>
+                <button class="nav-cmd" onclick="showSection('games')">./games</button>
+                <button class="nav-cmd" onclick="showSection('achievements')">./achievements</button>
+                <button class="nav-cmd" onclick="showSection('contact')">./contact</button>
+            </nav>
+
+            <!-- Home Section -->
+            <section id="home" class="section active">
+                <div class="hero-container">
+                    <pre class="ascii-art">
+    ___    ____  __  ___   ____ __ __  __  ___    ___    ____
+   /   |  / __ \/ / / / | / / //_// / / / /   |  / _ \  / __ \
+  / /| | / /_/ / / / /  |/ / ,<  / / / / / /| | / /_/ / / /_/ /
+ / ___ |/ _, _/ /_/ / /|  / /| |/ /_/ / / ___ |/ _, _/ / _, _/
+/_/  |_/_/ |_|\____/_/ |_/_/ |_|\____/ /_/  |_/_/ |_| /_/ |_|
+                    </pre>
+                    <h1 class="hero-name glitch" data-text="CHILIVERI ARUNKUMAR">CHILIVERI ARUNKUMAR</h1>
+                    <p class="hero-title">[ Full-Stack Developer | Robotics Engineer | AI Automation Specialist ]</p>
+                    <div class="typing-text" id="typing-text"></div>
+
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" data-count="200">0</div>
+                            <div class="stat-label">Students Mentored</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" data-count="500">0</div>
+                            <div class="stat-label">Event Attendees</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" data-count="10">0</div>
+                            <div class="stat-label">Projects Completed</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" data-count="2">0</div>
+                            <div class="stat-label">Innovation Awards</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="section">
+                <h2 class="section-title">About Me</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>> Electronics & Communication Engineering student with a passion for building innovative solutions at the intersection of hardware and software.</p>
+                        <p>> Expertise in robotics, full-stack development (MERN), and AI automation. I love turning complex problems into elegant, functional solutions.</p>
+                        <p>> Proven leader in organizing 2+ national-level technical events and hackathons. I've mentored 200+ students in technical project development.</p>
+                        <p>> Currently serving as Technical Chair Person at MLRIT CIE E-Cell, guiding cross-functional teams toward successful outcomes.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>// System Information</h3>
+                        <div class="info-item">
+                            <span class="info-label">Name:</span>
+                            <span class="info-value">Chiliveri Arunkumar</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location:</span>
+                            <span class="info-value">Hyderabad, India</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Education:</span>
+                            <span class="info-value">B.Tech ECE</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">GPA:</span>
+                            <span class="info-value">7.4</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: var(--terminal-green);">Available</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="education-grid" style="margin-top: 30px;">
+                    <div class="edu-card">
+                        <div class="edu-degree">Bachelor of Technology in Electronics & Communication Engineering</div>
+                        <div class="edu-school">MLR Institute of Technology, Hyderabad</div>
+                        <div class="edu-gpa">GPA: 7.4</div>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-degree">Intermediate Board (MPC)</div>
+                        <div class="edu-school">Bhavan's Sri Aurobindo Junior College, Hyderabad</div>
+                        <div class="edu-gpa">GPA: 6.86</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills" class="section">
+                <h2 class="section-title">Technical Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>// Web Development</h3>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>React.js</span>
+                                <span>90%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="90"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Node.js</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>MongoDB</span>
+                                <span>80%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="80"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Express.js</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>HTML/CSS</span>
+                                <span>95%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="95"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>// Programming & IoT</h3>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>C Programming</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>IoT Systems</span>
+                                <span>90%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="90"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Robotics</span>
+                                <span>88%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="88"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Microcontrollers</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>// Automation & AI</h3>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>n8n Workflow</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>AI Integration</span>
+                                <span>80%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="80"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>// Design & Tools</h3>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Figma</span>
+                                <span>80%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="80"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Adobe Illustrator</span>
+                                <span>75%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="75"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>Canva</span>
+                                <span>90%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="90"></div>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-name">
+                                <span>WordPress</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-progress" data-width="85"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Experience Section -->
+            <section id="experience" class="section">
+                <h2 class="section-title">Professional Experience</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">July 2025 - Present</div>
+                        <div class="timeline-title">Technical Chair Person</div>
+                        <div class="timeline-company">MLRIT CIE E-Cell, Hyderabad</div>
+                        <ul class="timeline-desc">
+                            <li>Spearhead technical strategy and project direction, guiding cross-functional teams toward successful outcomes</li>
+                            <li>Orchestrate planning and execution of technical workshops and events for wide student audience</li>
+                            <li>Serve as primary technical contact, providing expert guidance on complex engineering challenges</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">December 2024 - July 2025</div>
+                        <div class="timeline-title">Technical Mentor</div>
+                        <div class="timeline-company">MLRIT CIE E-Cell, Hyderabad</div>
+                        <ul class="timeline-desc">
+                            <li>Mentored 200+ students through complete lifecycle of micro-projects, fostering innovation and skill development</li>
+                            <li>Engineered and delivered comprehensive IoT workshop, equipping participants with hands-on technical skills</li>
+                            <li>Provided critical analysis and feedback contributing to runner-up finishes in two Innovation Challenges</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-date">June 2023 - December 2024</div>
+                        <div class="timeline-title">Technical Member</div>
+                        <div class="timeline-company">MLRIT CIE E-Cell, Hyderabad</div>
+                        <ul class="timeline-desc">
+                            <li>Contributed to development of technical projects and product prototypes using engineering principles</li>
+                            <li>Organized major events including Meta Loop Hackathon, coordinating logistics and technical infrastructure</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="section">
+                <h2 class="section-title">Key Projects</h2>
+                <div class="projects-grid">
+                    <div class="project-card" onclick="openProjectDemo('medha')">
+                        <div class="project-preview">
+                            <canvas id="medha-preview"></canvas>
+                        </div>
+                        <div class="project-info">
+                            <h3 class="project-title">Project Medha: Semi-Humanoid Robot</h3>
+                            <p class="project-desc">Led end-to-end design and construction of semi-humanoid robot with autonomous navigation, event anchoring, and real-time human interaction capabilities.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">Robotics</span>
+                                <span class="tech-tag">IoT</span>
+                                <span class="tech-tag">AI</span>
+                                <span class="tech-tag">Python</span>
+                            </div>
+                            <div class="project-actions">
+                                <button class="project-btn demo">View Demo</button>
+                                <button class="project-btn">Source Code</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card" onclick="openProjectDemo('ecommerce')">
+                        <div class="project-preview">
+                            <canvas id="ecommerce-preview"></canvas>
+                        </div>
+                        <div class="project-info">
+                            <h3 class="project-title">Full-Stack E-commerce Platform</h3>
+                            <p class="project-desc">Architected complete e-commerce website using MERN stack with RESTful APIs, product catalog, shopping cart, and order management.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">React</span>
+                                <span class="tech-tag">Node.js</span>
+                                <span class="tech-tag">MongoDB</span>
+                                <span class="tech-tag">Express</span>
+                            </div>
+                            <div class="project-actions">
+                                <button class="project-btn demo">View Demo</button>
+                                <button class="project-btn">Source Code</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card" onclick="openProjectDemo('automation')">
+                        <div class="project-preview">
+                            <canvas id="automation-preview"></canvas>
+                        </div>
+                        <div class="project-info">
+                            <h3 class="project-title">AI-Powered Automated Workflows</h3>
+                            <p class="project-desc">Deployed automated workflows using n8n integrated with AI assistants, streamlining processes and improving operational efficiency.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">n8n</span>
+                                <span class="tech-tag">AI</span>
+                                <span class="tech-tag">Automation</span>
+                                <span class="tech-tag">APIs</span>
+                            </div>
+                            <div class="project-actions">
+                                <button class="project-btn demo">View Demo</button>
+                                <button class="project-btn">Source Code</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card" onclick="openProjectDemo('gasdetection')">
+                        <div class="project-preview">
+                            <canvas id="gas-preview"></canvas>
+                        </div>
+                        <div class="project-info">
+                            <h3 class="project-title">IoT-Based Gas Detection System</h3>
+                            <p class="project-desc">Built real-time gas detection prototype using IoT sensors, microcontrollers, and wireless communication for environmental safety monitoring.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">IoT</span>
+                                <span class="tech-tag">Sensors</span>
+                                <span class="tech-tag">Arduino</span>
+                                <span class="tech-tag">WiFi</span>
+                            </div>
+                            <div class="project-actions">
+                                <button class="project-btn demo">View Demo</button>
+                                <button class="project-btn">Source Code</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Games Section -->
+            <section id="games" class="section">
+                <h2 class="section-title">Interactive Games</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 12px;">> Play some games while you're here! These demonstrate my interactive development skills.</p>
+                <div class="games-grid">
+                    <!-- Snake Game -->
+                    <div class="game-card">
+                        <div class="game-screen">
+                            <canvas id="snake-canvas" width="280" height="200"></canvas>
+                        </div>
+                        <div class="game-score" id="snake-score">Score: 0</div>
+                        <div class="game-info">
+                            <h3 class="game-title">Snake.exe</h3>
+                            <p class="game-desc">Classic snake game with terminal aesthetics</p>
+                            <p class="game-controls">Controls: Arrow Keys or WASD</p>
+                        </div>
+                        <button class="game-btn" onclick="startSnakeGame()">START GAME</button>
+                    </div>
+
+                    <!-- Typing Game -->
+                    <div class="game-card">
+                        <div class="game-screen" style="padding: 20px;">
+                            <div id="typing-game-area" style="width: 100%; text-align: center;">
+                                <div id="typing-word" style="font-size: 24px; color: var(--terminal-cyan); margin-bottom: 20px;">Press Start</div>
+                                <input type="text" id="typing-input" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--terminal-green); color: var(--terminal-green); font-family: 'Fira Code', monospace; text-align: center;" placeholder="Type here..." disabled>
+                            </div>
+                        </div>
+                        <div class="game-score" id="typing-score">WPM: 0 | Accuracy: 100%</div>
+                        <div class="game-info">
+                            <h3 class="game-title">TypeRacer.exe</h3>
+                            <p class="game-desc">Test your typing speed and accuracy</p>
+                            <p class="game-controls">Type the words as fast as you can!</p>
+                        </div>
+                        <button class="game-btn" onclick="startTypingGame()">START GAME</button>
+                    </div>
+
+                    <!-- Memory Game -->
+                    <div class="game-card">
+                        <div class="game-screen" style="padding: 10px;">
+                            <div id="memory-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; height: 100%;"></div>
+                        </div>
+                        <div class="game-score" id="memory-score">Moves: 0 | Pairs: 0/8</div>
+                        <div class="game-info">
+                            <h3 class="game-title">Memory.exe</h3>
+                            <p class="game-desc">Match the programming symbols</p>
+                            <p class="game-controls">Click cards to reveal and match pairs</p>
+                        </div>
+                        <button class="game-btn" onclick="startMemoryGame()">START GAME</button>
+                    </div>
+
+                    <!-- Hacker Game -->
+                    <div class="game-card">
+                        <div class="game-screen" style="padding: 15px; overflow: hidden;">
+                            <div id="hacker-terminal" style="font-size: 10px; color: var(--terminal-green); height: 100%; overflow-y: auto;"></div>
+                        </div>
+                        <div class="game-score" id="hacker-score">Systems Hacked: 0</div>
+                        <div class="game-info">
+                            <h3 class="game-title">Hacker.exe</h3>
+                            <p class="game-desc">Simulate hacking into systems</p>
+                            <p class="game-controls">Watch the magic happen!</p>
+                        </div>
+                        <button class="game-btn" onclick="startHackerGame()">INITIATE HACK</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section id="achievements" class="section">
+                <h2 class="section-title">Achievements & Leadership</h2>
+                <div class="achievements-grid">
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🏆</div>
+                        <h3 class="achievement-title">Event Management</h3>
+                        <p class="achievement-desc">Organized 2+ national-level technical events and hackathons for 500+ attendees</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🥈</div>
+                        <h3 class="achievement-title">Innovation Recognition</h3>
+                        <p class="achievement-desc">Runner-up twice in MLR Institute of Technology's Innovation Challenge</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">👨‍🏫</div>
+                        <h3 class="achievement-title">Community Impact</h3>
+                        <p class="achievement-desc">Mentored 200+ students in technical project development and career readiness</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🤖</div>
+                        <h3 class="achievement-title">Project Medha</h3>
+                        <p class="achievement-desc">Led development of semi-humanoid robot with autonomous navigation capabilities</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🎯</div>
+                        <h3 class="achievement-title">Meta Loop Hackathon</h3>
+                        <p class="achievement-desc">Coordinated logistics and technical infrastructure for major hackathon event</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">💡</div>
+                        <h3 class="achievement-title">IoT Workshop</h3>
+                        <p class="achievement-desc">Engineered and delivered comprehensive IoT workshop with hands-on training</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section id="contact" class="section">
+                <h2 class="section-title">Contact Me</h2>
+                <div class="contact-container">
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <div class="contact-icon">📧</div>
+                            <div class="contact-details">
+                                <h4>Email</h4>
+                                <a href="mailto:Chiliveriarunkumar27@gmail.com">Chiliveriarunkumar27@gmail.com</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">📱</div>
+                            <div class="contact-details">
+                                <h4>Phone</h4>
+                                <a href="tel:+916304707047">+91 6304707047</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">📍</div>
+                            <div class="contact-details">
+                                <h4>Location</h4>
+                                <span>Hyderabad, Telangana, 500085</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">💼</div>
+                            <div class="contact-details">
+                                <h4>LinkedIn</h4>
+                                <a href="#">Connect with me</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">🐙</div>
+                            <div class="contact-details">
+                                <h4>GitHub</h4>
+                                <a href="#">View my repos</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-form">
+                        <form id="contact-form" onsubmit="handleSubmit(event)">
+                            <div class="form-group">
+                                <label for="name">Name:</label>
+                                <input type="text" id="name" name="name" required placeholder="Enter your name">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" id="email" name="email" required placeholder="Enter your email">
+                            </div>
+                            <div class="form-group">
+                                <label for="subject">Subject:</label>
+                                <input type="text" id="subject" name="subject" required placeholder="Enter subject">
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Message:</label>
+                                <textarea id="message" name="message" required placeholder="Enter your message"></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">SEND MESSAGE</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Command Line Interface -->
+            <div class="command-line">
+                <div class="cmd-input-container">
+                    <span class="cmd-prompt">visitor@arunkumar:~$</span>
+                    <input type="text" class="cmd-input" id="cmd-input" placeholder="Type 'help' for available commands..." onkeypress="handleCommand(event)">
+                </div>
+                <div class="cmd-output" id="cmd-output" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Demo Modal -->
+    <div class="modal" id="project-modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== BOOT SEQUENCE ====================
+        const bootMessages = [
+            'BIOS Version 4.2.1 - Arunkumar Systems',
+            'Initializing hardware components...',
+            'CPU: Intel Core i7-12700K @ 3.6GHz',
+            'RAM: 32GB DDR5 @ 5200MHz',
+            'GPU: NVIDIA RTX 4080 16GB',
+            'Loading kernel modules...',
+            'Mounting file systems...',
+            'Starting network services...',
+            'Loading portfolio data...',
+            'Initializing terminal interface...',
+            'Establishing secure connection...',
+            'Loading user preferences...',
+            'Starting GUI subsystem...',
+            '',
+            'Welcome to Arunkumar\'s Portfolio Terminal v2.0',
+            'Type "help" for available commands',
+            '',
+            'System ready.'
+        ];
+
+        async function bootSequence() {
+            const bootText = document.getElementById('boot-text');
+            const progressBar = document.getElementById('boot-progress-bar');
+
+            for (let i = 0; i < bootMessages.length; i++) {
+                const line = document.createElement('div');
+                line.className = 'boot-line';
+                line.textContent = bootMessages[i] || ' ';
+                bootText.appendChild(line);
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+                line.style.opacity = '1';
+                line.style.transform = 'translateY(0)';
+
+                progressBar.style.width = ((i + 1) / bootMessages.length * 100) + '%';
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            document.getElementById('boot-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('terminal-container').classList.add('visible');
+                initAnimations();
+            }, 500);
+        }
+
+        // ==================== MATRIX RAIN ====================
+        function initMatrixRain() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()アイウエオカキクケコサシスセソ';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff41';
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            setInterval(draw, 33);
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // ==================== PARTICLES ====================
+        function initParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        function showSection(sectionId) {
+            // Update nav buttons
+            document.querySelectorAll('.nav-cmd').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show section
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            // Trigger animations
+            if (sectionId === 'skills') {
+                animateSkillBars();
+            } else if (sectionId === 'home') {
+                animateCounters();
+            }
+        }
+
+        // ==================== TYPING ANIMATION ====================
+        const typingStrings = [
+            'Building the future with code and circuits...',
+            'Full-Stack Developer & Robotics Engineer',
+            'Transforming ideas into reality',
+            'Creating intelligent automation solutions',
+            'Mentoring the next generation of innovators'
+        ];
+
+        let stringIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function typeText() {
+            const element = document.getElementById('typing-text');
+            const currentString = typingStrings[stringIndex];
+
+            if (isDeleting) {
+                element.innerHTML = currentString.substring(0, charIndex - 1) + '<span class="cursor">|</span>';
+                charIndex--;
+            } else {
+                element.innerHTML = currentString.substring(0, charIndex + 1) + '<span class="cursor">|</span>';
+                charIndex++;
+            }
+
+            let timeout = isDeleting ? 50 : 100;
+
+            if (!isDeleting && charIndex === currentString.length) {
+                timeout = 2000;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                stringIndex = (stringIndex + 1) % typingStrings.length;
+                timeout = 500;
+            }
+
+            setTimeout(typeText, timeout);
+        }
+
+        // ==================== COUNTER ANIMATION ====================
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        counter.textContent = target + '+';
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current);
+                    }
+                }, 16);
+            });
+        }
+
+        // ==================== SKILL BARS ANIMATION ====================
+        function animateSkillBars() {
+            const bars = document.querySelectorAll('.skill-progress');
+            bars.forEach(bar => {
+                const width = bar.getAttribute('data-width');
+                setTimeout(() => {
+                    bar.style.width = width + '%';
+                }, 100);
+            });
+        }
+
+        // ==================== COMMAND LINE ====================
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('cmd-input');
+                const output = document.getElementById('cmd-output');
+                const command = input.value.trim().toLowerCase();
+
+                output.style.display = 'block';
+
+                let response = '';
+
+                switch (command) {
+                    case 'help':
+                        response = `Available commands:
+  help      - Show this help message
+  about     - About Arunkumar
+  skills    - List technical skills
+  contact   - Contact information
+  projects  - List projects
+  clear     - Clear terminal
+  games     - Play interactive games
+  sudo hire - Special command ;)`;
+                        break;
+                    case 'about':
+                        response = `Chiliveri Arunkumar
+━━━━━━━━━━━━━━━━━━━━
+ECE Student | Full-Stack Developer | Robotics Engineer
+Location: Hyderabad, India
+Status: Open to opportunities`;
+                        break;
+                    case 'skills':
+                        response = `Technical Skills:
+━━━━━━━━━━━━━━━━━━━━
+• Web: React, Node.js, MongoDB, Express
+• IoT: Arduino, Sensors, Microcontrollers
+• AI: n8n Automation, AI Integration
+• Design: Figma, Illustrator, Canva`;
+                        break;
+                    case 'contact':
+                        response = `Contact Information:
+━━━━━━━━━━━━━━━━━━━━
+Email: Chiliveriarunkumar27@gmail.com
+Phone: +91 6304707047
+Location: Hyderabad, Telangana`;
+                        break;
+                    case 'projects':
+                        response = `Key Projects:
+━━━━━━━━━━━━━━━━━━━━
+1. Project Medha - Semi-Humanoid Robot
+2. E-commerce Platform - MERN Stack
+3. AI Automation Workflows - n8n
+4. IoT Gas Detection System`;
+                        break;
+                    case 'clear':
+                        output.innerHTML = '';
+                        output.style.display = 'none';
+                        input.value = '';
+                        return;
+                    case 'games':
+                        response = `Available Games:
+━━━━━━━━━━━━━━━━━━━━
+Navigate to ./games section to play:
+• Snake.exe - Classic snake game
+• TypeRacer.exe - Typing speed test
+• Memory.exe - Match the pairs
+• Hacker.exe - Hack simulation`;
+                        break;
+                    case 'sudo hire':
+                        response = `
+🎉 ACCESS GRANTED 🎉
+━━━━━━━━━━━━━━━━━━━━
+Excellent choice! I'm available for:
+• Full-time positions
+• Freelance projects
+• Collaborations
+
+Let's build something amazing together!
+Contact: Chiliveriarunkumar27@gmail.com`;
+                        break;
+                    default:
+                        response = `Command not found: ${command}
+Type 'help' for available commands.`;
+                }
+
+                output.innerHTML += `<div style="color: var(--terminal-cyan);">visitor@arunkumar:~$ ${command}</div>`;
+                output.innerHTML += `<pre style="color: #888; margin: 10px 0;">${response}</pre>`;
+                output.scrollTop = output.scrollHeight;
+                input.value = '';
+            }
+        }
+
+        // ==================== SNAKE GAME ====================
+        let snakeGame = null;
+
+        function startSnakeGame() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreElement = document.getElementById('snake-score');
+
+            const gridSize = 10;
+            let snake = [{x: 140, y: 100}];
+            let food = {x: 0, y: 0};
+            let dx = gridSize;
+            let dy = 0;
+            let score = 0;
+            let gameLoop;
+
+            function placeFood() {
+                food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+                food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+            }
+
+            function draw() {
+                // Clear canvas
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw grid
+                ctx.strokeStyle = '#111';
+                for (let i = 0; i < canvas.width; i += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i < canvas.height; i += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+
+                // Draw food
+                ctx.fillStyle = '#ff0040';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff0040';
+                ctx.fillRect(food.x, food.y, gridSize - 1, gridSize - 1);
+                ctx.shadowBlur = 0;
+
+                // Draw snake
+                snake.forEach((segment, index) => {
+                    ctx.fillStyle = index === 0 ? '#00ff41' : '#00aa2a';
+                    ctx.fillRect(segment.x, segment.y, gridSize - 1, gridSize - 1);
+                });
+
+                // Move snake
+                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+                // Wall collision
+                if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                    gameOver();
+                    return;
+                }
+
+                // Self collision
+                for (let segment of snake) {
+                    if (head.x === segment.x && head.y === segment.y) {
+                        gameOver();
+                        return;
+                    }
+                }
+
+                snake.unshift(head);
+
+                // Check food collision
+                if (head.x === food.x && head.y === food.y) {
+                    score += 10;
+                    scoreElement.textContent = `Score: ${score}`;
+                    placeFood();
+                } else {
+                    snake.pop();
+                }
+            }
+
+            function gameOver() {
+                clearInterval(gameLoop);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ff0040';
+                ctx.font = '16px "Fira Code"';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.fillStyle = '#00ff41';
+                ctx.font = '12px "Fira Code"';
+                ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 15);
+            }
+
+            function handleKey(e) {
+                switch (e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        if (dy === 0) { dx = 0; dy = -gridSize; }
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        if (dy === 0) { dx = 0; dy = gridSize; }
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        if (dx === 0) { dx = -gridSize; dy = 0; }
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        if (dx === 0) { dx = gridSize; dy = 0; }
+                        break;
+                }
+            }
+
+            // Reset game
+            if (snakeGame) {
+                clearInterval(snakeGame);
+                document.removeEventListener('keydown', snakeGame.handleKey);
+            }
+
+            snake = [{x: 140, y: 100}];
+            dx = gridSize;
+            dy = 0;
+            score = 0;
+            scoreElement.textContent = 'Score: 0';
+            placeFood();
+
+            document.addEventListener('keydown', handleKey);
+            gameLoop = setInterval(draw, 100);
+            snakeGame = { handleKey, interval: gameLoop };
+        }
+
+        // ==================== TYPING GAME ====================
+        const programmingWords = [
+            'function', 'variable', 'const', 'return', 'async', 'await',
+            'import', 'export', 'class', 'interface', 'boolean', 'string',
+            'array', 'object', 'promise', 'callback', 'closure', 'scope',
+            'prototype', 'constructor', 'inheritance', 'polymorphism',
+            'encapsulation', 'abstraction', 'recursion', 'iteration'
+        ];
+
+        let typingGameActive = false;
+        let currentWord = '';
+        let wordsTyped = 0;
+        let correctChars = 0;
+        let totalChars = 0;
+        let startTime = 0;
+
+        function startTypingGame() {
+            const wordElement = document.getElementById('typing-word');
+            const inputElement = document.getElementById('typing-input');
+            const scoreElement = document.getElementById('typing-score');
+
+            typingGameActive = true;
+            wordsTyped = 0;
+            correctChars = 0;
+            totalChars = 0;
+            startTime = Date.now();
+
+            inputElement.disabled = false;
+            inputElement.value = '';
+            inputElement.focus();
+
+            function newWord() {
+                currentWord = programmingWords[Math.floor(Math.random() * programmingWords.length)];
+                wordElement.textContent = currentWord;
+            }
+
+            newWord();
+
+            inputElement.oninput = function() {
+                const typed = inputElement.value;
+                totalChars++;
+
+                if (typed === currentWord) {
+                    correctChars += currentWord.length;
+                    wordsTyped++;
+                    inputElement.value = '';
+                    newWord();
+
+                    // Update score
+                    const elapsed = (Date.now() - startTime) / 1000 / 60;
+                    const wpm = Math.round(wordsTyped / elapsed) || 0;
+                    const accuracy = Math.round((correctChars / totalChars) * 100) || 100;
+                    scoreElement.textContent = `WPM: ${wpm} | Accuracy: ${accuracy}%`;
+                }
+            };
+        }
+
+        // ==================== MEMORY GAME ====================
+        const symbols = ['{ }', '[ ]', '( )', '< >', '&&', '||', '=>', '::'];
+        let memoryCards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+
+        function startMemoryGame() {
+            const grid = document.getElementById('memory-grid');
+            const scoreElement = document.getElementById('memory-score');
+
+            // Reset
+            grid.innerHTML = '';
+            memoryCards = [...symbols, ...symbols];
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            scoreElement.textContent = 'Moves: 0 | Pairs: 0/8';
+
+            // Shuffle
+            for (let i = memoryCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [memoryCards[i], memoryCards[j]] = [memoryCards[j], memoryCards[i]];
+            }
+
+            // Create cards
+            memoryCards.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: #111;
+                    border: 1px solid #333;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 14px;
+                    color: var(--terminal-green);
+                    transition: all 0.3s ease;
+                `;
+                card.textContent = '?';
+                card.dataset.index = index;
+                card.dataset.symbol = symbol;
+                card.dataset.flipped = 'false';
+
+                card.onclick = () => flipCard(card, scoreElement);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card, scoreElement) {
+            if (card.dataset.flipped === 'true' || flippedCards.length === 2) return;
+
+            card.textContent = card.dataset.symbol;
+            card.dataset.flipped = 'true';
+            card.style.background = '#1a1a1a';
+            card.style.borderColor = 'var(--terminal-green)';
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++;
+
+                if (flippedCards[0].dataset.symbol === flippedCards[1].dataset.symbol) {
+                    matchedPairs++;
+                    flippedCards[0].style.background = 'rgba(0, 255, 65, 0.2)';
+                    flippedCards[1].style.background = 'rgba(0, 255, 65, 0.2)';
+                    flippedCards = [];
+
+                    if (matchedPairs === 8) {
+                        setTimeout(() => alert(`Congratulations! Completed in ${moves} moves!`), 300);
+                    }
+                } else {
+                    setTimeout(() => {
+                        flippedCards.forEach(c => {
+                            c.textContent = '?';
+                            c.dataset.flipped = 'false';
+                            c.style.background = '#111';
+                            c.style.borderColor = '#333';
+                        });
+                        flippedCards = [];
+                    }, 1000);
+                }
+
+                scoreElement.textContent = `Moves: ${moves} | Pairs: ${matchedPairs}/8`;
+            }
+        }
+
+        // ==================== HACKER GAME ====================
+        const hackerMessages = [
+            'Initializing backdoor protocol...',
+            'Bypassing firewall...',
+            'Accessing mainframe...',
+            'Decrypting password hash...',
+            'Password found: ********',
+            'Establishing SSH tunnel...',
+            'Uploading payload...',
+            'Executing remote shell...',
+            'Extracting database...',
+            'Covering tracks...',
+            'ACCESS GRANTED',
+            'System compromised successfully!'
+        ];
+
+        let hackCount = 0;
+
+        async function startHackerGame() {
+            const terminal = document.getElementById('hacker-terminal');
+            const scoreElement = document.getElementById('hacker-score');
+
+            terminal.innerHTML = '';
+
+            for (let msg of hackerMessages) {
+                const line = document.createElement('div');
+
+                // Random "code" before message
+                const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+                line.innerHTML = `<span style="color: #444">[${code}]</span> ${msg}`;
+                terminal.appendChild(line);
+                terminal.scrollTop = terminal.scrollHeight;
+
+                await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+
+                // Add some random "data"
+                if (Math.random() > 0.5) {
+                    const data = document.createElement('div');
+                    data.style.color = '#333';
+                    data.textContent = Array(20).fill().map(() =>
+                        Math.random().toString(16).substring(2, 4)
+                    ).join(' ');
+                    terminal.appendChild(data);
+                }
+            }
+
+            hackCount++;
+            scoreElement.textContent = `Systems Hacked: ${hackCount}`;
+
+            // Final message
+            const final = document.createElement('div');
+            final.style.color = 'var(--terminal-green)';
+            final.style.marginTop = '10px';
+            final.textContent = '> Mission accomplished. Connection terminated.';
+            terminal.appendChild(final);
+        }
+
+        // ==================== PROJECT PREVIEWS ====================
+        function initProjectPreviews() {
+            // Medha Robot Preview - Animated robot
+            const medhaCanvas = document.getElementById('medha-preview');
+            if (medhaCanvas) {
+                const ctx = medhaCanvas.getContext('2d');
+                medhaCanvas.width = medhaCanvas.offsetWidth;
+                medhaCanvas.height = medhaCanvas.offsetHeight;
+
+                let angle = 0;
+                function drawRobot() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, medhaCanvas.width, medhaCanvas.height);
+
+                    const centerX = medhaCanvas.width / 2;
+                    const centerY = medhaCanvas.height / 2;
+
+                    // Body
+                    ctx.fillStyle = '#00ff41';
+                    ctx.fillRect(centerX - 30, centerY - 20, 60, 80);
+
+                    // Head
+                    ctx.fillRect(centerX - 20, centerY - 50, 40, 30);
+
+                    // Eyes
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(centerX - 12, centerY - 42, 8, 8);
+                    ctx.fillRect(centerX + 4, centerY - 42, 8, 8);
+
+                    // Animated antenna
+                    ctx.strokeStyle = '#00ff41';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - 50);
+                    ctx.lineTo(centerX + Math.sin(angle) * 10, centerY - 70);
+                    ctx.stroke();
+                    ctx.fillStyle = '#ff0040';
+                    ctx.beginPath();
+                    ctx.arc(centerX + Math.sin(angle) * 10, centerY - 70, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Arms
+                    ctx.fillStyle = '#00ff41';
+                    ctx.fillRect(centerX - 45, centerY - 10 + Math.sin(angle * 2) * 5, 15, 50);
+                    ctx.fillRect(centerX + 30, centerY - 10 - Math.sin(angle * 2) * 5, 15, 50);
+
+                    angle += 0.05;
+                    requestAnimationFrame(drawRobot);
+                }
+                drawRobot();
+            }
+
+            // E-commerce Preview - Shopping animation
+            const ecomCanvas = document.getElementById('ecommerce-preview');
+            if (ecomCanvas) {
+                const ctx = ecomCanvas.getContext('2d');
+                ecomCanvas.width = ecomCanvas.offsetWidth;
+                ecomCanvas.height = ecomCanvas.offsetHeight;
+
+                let cartItems = 0;
+                let productY = -50;
+
+                function drawEcommerce() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, ecomCanvas.width, ecomCanvas.height);
+
+                    // Draw product falling
+                    ctx.fillStyle = '#00d4ff';
+                    ctx.fillRect(ecomCanvas.width / 2 - 15, productY, 30, 30);
+
+                    // Draw cart
+                    ctx.strokeStyle = '#00ff41';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(ecomCanvas.width / 2 - 40, ecomCanvas.height - 60);
+                    ctx.lineTo(ecomCanvas.width / 2 - 30, ecomCanvas.height - 30);
+                    ctx.lineTo(ecomCanvas.width / 2 + 30, ecomCanvas.height - 30);
+                    ctx.lineTo(ecomCanvas.width / 2 + 40, ecomCanvas.height - 60);
+                    ctx.stroke();
+
+                    // Cart items counter
+                    ctx.fillStyle = '#ffb000';
+                    ctx.font = '12px "Fira Code"';
+                    ctx.fillText(`Items: ${cartItems}`, ecomCanvas.width / 2 - 25, ecomCanvas.height - 10);
+
+                    productY += 3;
+                    if (productY > ecomCanvas.height - 60) {
+                        productY = -50;
+                        cartItems = (cartItems + 1) % 10;
+                    }
+
+                    requestAnimationFrame(drawEcommerce);
+                }
+                drawEcommerce();
+            }
+
+            // Automation Preview - Workflow animation
+            const autoCanvas = document.getElementById('automation-preview');
+            if (autoCanvas) {
+                const ctx = autoCanvas.getContext('2d');
+                autoCanvas.width = autoCanvas.offsetWidth;
+                autoCanvas.height = autoCanvas.offsetHeight;
+
+                let flowPos = 0;
+
+                function drawAutomation() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, autoCanvas.width, autoCanvas.height);
+
+                    // Draw nodes
+                    const nodes = [
+                        {x: 50, y: 100, label: 'IN'},
+                        {x: 150, y: 60, label: 'AI'},
+                        {x: 150, y: 140, label: 'DB'},
+                        {x: 250, y: 100, label: 'OUT'}
+                    ];
+
+                    // Draw connections
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(70, 100);
+                    ctx.lineTo(130, 60);
+                    ctx.moveTo(70, 100);
+                    ctx.lineTo(130, 140);
+                    ctx.moveTo(170, 60);
+                    ctx.lineTo(230, 100);
+                    ctx.moveTo(170, 140);
+                    ctx.lineTo(230, 100);
+                    ctx.stroke();
+
+                    // Animated flow
+                    ctx.fillStyle = '#bf00ff';
+                    const flowX = 50 + flowPos * 2;
+                    if (flowPos < 50) {
+                        ctx.beginPath();
+                        ctx.arc(flowX, 100 - flowPos * 0.8, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (flowPos < 100) {
+                        ctx.beginPath();
+                        ctx.arc(150 + (flowPos - 50) * 2, 60 + (flowPos - 50) * 0.8, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Draw nodes
+                    nodes.forEach(node => {
+                        ctx.fillStyle = '#111';
+                        ctx.strokeStyle = '#00ff41';
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#00ff41';
+                        ctx.font = '10px "Fira Code"';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(node.label, node.x, node.y + 4);
+                    });
+
+                    flowPos = (flowPos + 1) % 100;
+                    requestAnimationFrame(drawAutomation);
+                }
+                drawAutomation();
+            }
+
+            // Gas Detection Preview - Sensor animation
+            const gasCanvas = document.getElementById('gas-preview');
+            if (gasCanvas) {
+                const ctx = gasCanvas.getContext('2d');
+                gasCanvas.width = gasCanvas.offsetWidth;
+                gasCanvas.height = gasCanvas.offsetHeight;
+
+                let gasLevel = 0;
+                let direction = 1;
+
+                function drawGasDetection() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, gasCanvas.width, gasCanvas.height);
+
+                    // Draw sensor
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(gasCanvas.width / 2 - 40, gasCanvas.height / 2 - 30, 80, 60);
+
+                    // Draw display
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(gasCanvas.width / 2 - 30, gasCanvas.height / 2 - 20, 60, 30);
+
+                    // Gas level indicator
+                    let color = '#00ff41';
+                    if (gasLevel > 60) color = '#ffb000';
+                    if (gasLevel > 80) color = '#ff0040';
+
+                    ctx.fillStyle = color;
+                    ctx.font = '14px "Fira Code"';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(Math.floor(gasLevel) + '%', gasCanvas.width / 2, gasCanvas.height / 2);
+
+                    // Warning indicator
+                    if (gasLevel > 80) {
+                        ctx.fillStyle = Math.random() > 0.5 ? '#ff0040' : '#000';
+                        ctx.beginPath();
+                        ctx.arc(gasCanvas.width / 2 + 50, gasCanvas.height / 2, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Status text
+                    ctx.fillStyle = '#666';
+                    ctx.font = '10px "Fira Code"';
+                    const status = gasLevel > 80 ? 'DANGER' : gasLevel > 60 ? 'WARNING' : 'SAFE';
+                    ctx.fillText(status, gasCanvas.width / 2, gasCanvas.height / 2 + 50);
+
+                    gasLevel += direction * 0.5;
+                    if (gasLevel > 95 || gasLevel < 10) direction *= -1;
+
+                    requestAnimationFrame(drawGasDetection);
+                }
+                drawGasDetection();
+            }
+        }
+
+        // ==================== PROJECT MODAL ====================
+        function openProjectDemo(project) {
+            const modal = document.getElementById('project-modal');
+            const modalBody = document.getElementById('modal-body');
+
+            let content = '';
+
+            switch (project) {
+                case 'medha':
+                    content = `
+                        <h2 style="color: var(--terminal-cyan); margin-bottom: 20px;">Project Medha: Semi-Humanoid Robot</h2>
+                        <div style="background: #000; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                            <pre style="color: var(--terminal-green); font-size: 12px;">
+> System: Project Medha v2.0
+> Status: OPERATIONAL
+> Features:
+  - Autonomous navigation
+  - Voice recognition
+  - Event anchoring
+  - Interactive games
+  - Real-time human interaction
+                            </pre>
+                        </div>
+                        <p style="color: #888; line-height: 1.6;">
+                            Led end-to-end design and construction of a semi-humanoid robot capable of autonomous navigation,
+                            event anchoring, and real-time human interaction. Features onboard display for interactive games
+                            and educational demonstrations.
+                        </p>
+                        <div style="margin-top: 20px;">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">ROS</span>
+                            <span class="tech-tag">OpenCV</span>
+                            <span class="tech-tag">TensorFlow</span>
+                            <span class="tech-tag">Arduino</span>
+                        </div>
+                    `;
+                    break;
+                case 'ecommerce':
+                    content = `
+                        <h2 style="color: var(--terminal-cyan); margin-bottom: 20px;">Full-Stack E-commerce Platform</h2>
+                        <div style="background: #000; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                            <pre style="color: var(--terminal-green); font-size: 12px;">
+> Stack: MERN (MongoDB, Express, React, Node.js)
+> Features:
+  - User authentication & authorization
+  - Product catalog with search/filter
+  - Shopping cart management
+  - Order processing & tracking
+  - Payment gateway integration
+  - Admin dashboard
+                            </pre>
+                        </div>
+                        <p style="color: #888; line-height: 1.6;">
+                            Architected and developed a complete e-commerce website using the MERN stack with RESTful APIs,
+                            featuring product catalog, shopping cart, user authentication, and order management system.
+                        </p>
+                        <div style="margin-top: 20px;">
+                            <span class="tech-tag">React</span>
+                            <span class="tech-tag">Node.js</span>
+                            <span class="tech-tag">MongoDB</span>
+                            <span class="tech-tag">Express</span>
+                            <span class="tech-tag">JWT</span>
+                        </div>
+                    `;
+                    break;
+                case 'automation':
+                    content = `
+                        <h2 style="color: var(--terminal-cyan); margin-bottom: 20px;">AI-Powered Automated Workflows</h2>
+                        <div style="background: #000; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                            <pre style="color: var(--terminal-green); font-size: 12px;">
+> Platform: n8n Workflow Automation
+> Integrations:
+  - OpenAI GPT models
+  - Slack notifications
+  - Google Sheets sync
+  - Email automation
+  - Database operations
+  - Custom webhooks
+                            </pre>
+                        </div>
+                        <p style="color: #888; line-height: 1.6;">
+                            Deployed automated workflows using n8n integrated with AI assistants to streamline business
+                            processes and improve operational efficiency. Includes data processing, notifications, and
+                            intelligent decision-making capabilities.
+                        </p>
+                        <div style="margin-top: 20px;">
+                            <span class="tech-tag">n8n</span>
+                            <span class="tech-tag">GPT-4</span>
+                            <span class="tech-tag">APIs</span>
+                            <span class="tech-tag">Webhooks</span>
+                        </div>
+                    `;
+                    break;
+                case 'gasdetection':
+                    content = `
+                        <h2 style="color: var(--terminal-cyan); margin-bottom: 20px;">IoT-Based Gas Detection System</h2>
+                        <div style="background: #000; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                            <pre style="color: var(--terminal-green); font-size: 12px;">
+> Sensors: MQ-2, MQ-135, MQ-7
+> Microcontroller: ESP32
+> Features:
+  - Real-time gas monitoring
+  - Multi-gas detection (CO, LPG, Smoke)
+  - WiFi connectivity
+  - Mobile app alerts
+  - Cloud data logging
+  - Threshold-based alarms
+                            </pre>
+                        </div>
+                        <p style="color: #888; line-height: 1.6;">
+                            Built a real-time gas detection prototype using IoT sensors, microcontrollers, and wireless
+                            communication for environmental safety monitoring. Features mobile alerts and cloud-based
+                            data logging for analysis.
+                        </p>
+                        <div style="margin-top: 20px;">
+                            <span class="tech-tag">ESP32</span>
+                            <span class="tech-tag">IoT</span>
+                            <span class="tech-tag">Sensors</span>
+                            <span class="tech-tag">Firebase</span>
+                        </div>
+                    `;
+                    break;
+            }
+
+            modalBody.innerHTML = content;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('project-modal').classList.remove('active');
+        }
+
+        // ==================== TERMINAL BUTTONS ====================
+        function closeTerminal() {
+            if (confirm('Are you sure you want to leave?')) {
+                document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--terminal-green); font-family: monospace;">Connection terminated. Refresh to reconnect.</div>';
+            }
+        }
+
+        function minimizeTerminal() {
+            document.querySelector('.terminal-body').style.display =
+                document.querySelector('.terminal-body').style.display === 'none' ? 'block' : 'none';
+        }
+
+        function maximizeTerminal() {
+            const container = document.querySelector('.terminal-container');
+            container.style.maxWidth = container.style.maxWidth === '100%' ? '1400px' : '100%';
+        }
+
+        // ==================== FORM HANDLER ====================
+        function handleSubmit(event) {
+            event.preventDefault();
+            alert('Thank you for your message! I will get back to you soon.');
+            event.target.reset();
+        }
+
+        // ==================== INITIALIZATION ====================
+        function initAnimations() {
+            typeText();
+            animateCounters();
+            initProjectPreviews();
+        }
+
+        // Start everything
+        window.onload = function() {
+            initMatrixRain();
+            initParticles();
+            bootSequence();
+        };
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('project-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
